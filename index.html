@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Manet Pizza — Estoque</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f4;color:#222}
+.app{max-width:420px;margin:0 auto;background:#f4f4f4;min-height:100vh}
+.header{background:#c0392b;color:white;padding:.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.header h1{font-size:15px;font-weight:600}
+.hright{display:flex;align-items:center;gap:8px}
+.logout-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer}
+.nav{display:flex;border-bottom:1px solid #ddd;background:#fff;position:sticky;top:48px;z-index:9}
+.nav button{flex:1;min-width:60px;padding:10px 4px;font-size:11px;border:none;background:transparent;cursor:pointer;color:#888;border-bottom:2px solid transparent}
+.nav button.active{color:#c0392b;border-bottom-color:#c0392b;font-weight:600}
+.page{display:none;padding:1rem;padding-bottom:4rem}
+.page.active{display:block}
+.card{background:#fff;border-radius:12px;padding:1rem;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.card-title{font-size:11px;font-weight:600;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.item-row{display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid #f0f0f0}
+.item-row:last-child{border-bottom:none}
+.item-row.alerta{background:#fff5f5;border-radius:8px;padding:9px;margin:3px 0;border:1px solid #fcc}
+.iname{flex:1;font-size:13px;color:#222}
+.iname.danger{color:#c0392b;font-weight:600}
+.iunit{font-size:11px;color:#999;width:28px;text-align:center;padding-top:3px}
+.qty-input{width:62px;text-align:center;font-size:14px;padding:5px 4px;border:1px solid #ddd;border-radius:8px;background:#f9f9f9;color:#222}
+.qty-input.danger{border-color:#e74c3c;background:#fff0f0;color:#c0392b}
+.alerta-sub{font-size:11px;color:#c0392b;margin-top:3px}
+.min-sub{font-size:11px;color:#aaa;margin-top:2px}
+.btn-primary{width:100%;background:#c0392b;color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
+.btn-copy{width:100%;background:#25D366;color:white;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-copy.copied{background:#1e8449}
+.btn-txt{width:100%;background:#f0f0f0;color:#333;border:1px solid #ddd;border-radius:10px;padding:12px;font-size:13px;font-weight:500;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.07)}
+.stat-card.danger{background:#fff0f0}
+.stat-label{font-size:11px;color:#999;margin-bottom:3px}
+.stat-value{font-size:22px;font-weight:700;color:#222}
+.stat-value.danger{color:#c0392b}
+.banner{border-radius:10px;padding:10px 12px;margin-bottom:12px;display:none}
+.banner.red{background:#fff0f0;border:1px solid #fcc}
+.banner.green{background:#eafaf1;border:1px solid #abebc6}
+.banner.amber{background:#fef9e7;border:1px solid #f9e79f}
+.banner-title{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.banner.red .banner-title{color:#c0392b}
+.banner.green .banner-title{color:#1e8449}
+.banner.amber .banner-title{color:#b7770d}
+.banner-item{font-size:12px;padding:3px 0;display:flex;justify-content:space-between}
+.banner.red .banner-item{color:#c0392b}
+.dias-sel{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.dia-btn{padding:9px 11px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid #ddd;background:#f5f5f5;color:#888;transition:all .12s}
+.compra-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f0f0f0}
+.compra-item:last-child{border-bottom:none}
+.cname{font-size:13px;color:#222;font-weight:500}
+.cqtd{font-size:11px;color:#999}
+.cval{font-size:13px;font-weight:600}
+.total-row{display:flex;justify-content:space-between;padding:10px 0 0;border-top:2px solid #f0f0f0;margin-top:4px}
+.total-label{font-size:14px;font-weight:600}
+.total-valor{font-size:18px;font-weight:700;color:#c0392b}
+.preco-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f0f0f0}
+.preco-row:last-child{border-bottom:none}
+.preco-nome{flex:1;font-size:13px}
+.preco-input{width:78px;text-align:right;font-size:13px;padding:5px 8px;border:1px solid #ddd;border-radius:8px;background:#f9f9f9}
+.saved-msg{color:#1e8449;font-size:13px;text-align:center;padding:8px;display:none}
+select{width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:8px;background:#f9f9f9;color:#222;font-size:13px;margin-bottom:10px}
+.turno-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:600;margin-bottom:10px}
+.turno-alfa{background:#ebf5fb;color:#1a6fa0}
+.turno-final{background:#fef9e7;color:#b7770d}
+.turno-bloq{background:#f2f3f4;color:#666}
+.nota-card{background:#f9f9f9;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #eee}
+.nota-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.nota-data{font-size:11px;color:#999}
+.nota-valor-txt{font-size:14px;font-weight:700;color:#c0392b}
+.nota-desc-txt{font-size:12px;color:#666}
+.nota-foto{width:100%;border-radius:8px;margin-top:6px;max-height:140px;object-fit:cover}
+.foto-placeholder{background:#f9f9f9;border:1.5px dashed #ddd;border-radius:10px;padding:18px;text-align:center;color:#aaa;font-size:12px;cursor:pointer;margin-top:8px}
+input[type=file]{display:none}
+.login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;background:#f4f4f4}
+.login-logo{background:#c0392b;color:white;width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;font-size:30px}
+.login-screen h2{font-size:22px;font-weight:700;margin-bottom:4px;color:#222}
+.login-screen>p{font-size:14px;color:#888;margin-bottom:1.5rem}
+.login-card{background:#fff;border-radius:16px;padding:1.5rem;width:100%;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+.login-card label{font-size:13px;color:#666;display:block;margin-bottom:5px;font-weight:500}
+.login-card input{width:100%;padding:11px 12px;border:1px solid #ddd;border-radius:9px;background:#f9f9f9;color:#222;font-size:14px;margin-bottom:12px}
+.login-error{color:#c0392b;font-size:13px;text-align:center;margin-top:8px;display:none}
+.perfil-badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-gestor{background:#fef0e0;color:#b7770d}
+.badge-compras{background:#ebf5fb;color:#1a6fa0}
+.badge-cozinha{background:#eafaf1;color:#1e8449}
+.usuarios-ref{margin-top:1.5rem;background:#fff;border-radius:12px;padding:1rem;width:100%;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.config-cell{display:flex;flex-direction:column;gap:4px}
+.config-cell label{font-size:11px;color:#888;font-weight:500}
+.config-cell input{padding:6px 8px;border:1px solid #ddd;border-radius:8px;background:#f9f9f9;font-size:13px;text-align:center}
+textarea{width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:8px;background:#f9f9f9;color:#222;font-size:13px;resize:vertical;min-height:72px;font-family:inherit}
+.lista-txt{background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:10px;font-size:12px;color:#333;white-space:pre-wrap;margin-top:8px;line-height:1.7;font-family:monospace}
+</style>
+</head>
+<body>
+<div class="app">
+<div id="login-screen" class="login-screen">
+  <div class="login-logo">🍕</div>
+  <h2>Manet Pizza</h2>
+  <p>Sistema de Estoque &amp; Compras</p>
+  <div class="login-card">
+    <label>Usuário</label>
+    <input type="text" id="login-user" placeholder="seu usuário" autocomplete="off"/>
+    <label>Senha</label>
+    <input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')fazerLogin()"/>
+    <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
+    <div class="login-error" id="login-error">Usuário ou senha incorretos.</div>
+  </div>
+  <div class="usuarios-ref">
+    <p style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600">Usuários (senha padrão: 1234)</p>
+    <div style="font-size:12px;color:#888;line-height:2.2">
+      <b style="color:#222">gestor</b> &nbsp;<span class="perfil-badge badge-gestor">Master</span><br>
+      <b style="color:#222">compras</b> &nbsp;<span class="perfil-badge badge-compras">Compras</span><br>
+      <b style="color:#222">cozinha1 / cozinha2 / cozinha3</b> &nbsp;<span class="perfil-badge badge-cozinha">Cozinha</span>
+    </div>
+  </div>
+</div>
+
+<div id="main-app" style="display:none">
+  <div class="header">
+    <h1>🍕 Manet Pizza</h1>
+    <div class="hright">
+      <span id="perfil-label"></span>
+      <button class="logout-btn" onclick="logout()">Sair</button>
+    </div>
+  </div>
+  <nav class="nav" id="nav-bar"></nav>
+
+  <div id="page-contagem" class="page">
+    <div id="turno-info" style="margin-bottom:8px"></div>
+    <div id="banner-alerta" class="banner red"></div>
+    <div id="banner-ok" class="banner green"></div>
+    <div id="banner-bloq" class="banner amber" style="display:none">
+      <div class="banner-title">⏰ Fora do horário de contagem</div>
+      <p style="font-size:12px;color:#b7770d">Turno Alfa: até 23h30 &nbsp;|&nbsp; Turno Final: até 05h00</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Itens contados</div><div class="stat-value" id="stat-cont">0</div></div>
+      <div class="stat-card" id="sc-falta"><div class="stat-label">Faltam hoje</div><div class="stat-value danger" id="stat-falta">0</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Contagem de estoque</div>
+      <div id="lista-contagem"></div>
+    </div>
+    <div id="btn-salvar-wrap">
+      <button class="btn-primary" onclick="salvarContagem()">💾 Salvar contagem</button>
+    </div>
+    <div class="saved-msg" id="msg-contagem">✅ Contagem salva!</div>
+  </div>
+
+  <div id="page-compras" class="page">
+    <div id="banner-compras-alerta" class="banner red"></div>
+    <div id="banner-compras-ok" class="banner green"></div>
+    <div class="card">
+      <div class="card-title">Dias para comprar</div>
+      <p style="font-size:12px;color:#999;margin-bottom:12px">Hoje já está marcado em verde. Toque para adicionar mais dias:</p>
+      <div class="dias-sel" id="dias-selector"></div>
+      <button class="btn-primary" onclick="gerarLista()">🧮 Calcular lista</button>
+    </div>
+    <div id="resultado-compras" style="display:none">
+      <div class="card">
+        <div class="card-title">Lista gerada</div>
+        <div id="lista-compras-itens"></div>
+        <div class="total-row">
+          <span class="total-label">Total estimado</span>
+          <span class="total-valor" id="total-compras">—</span>
+        </div>
+        <div id="lista-texto" class="lista-txt" style="display:none"></div>
+        <button class="btn-copy" id="btn-wpp" onclick="copiarLista('wpp')">📱 Copiar para WhatsApp</button>
+        <button class="btn-txt" onclick="copiarLista('txt')">📋 Copiar texto simples</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:4px">
+      <div class="card-title">Registrar nota fiscal</div>
+      <label style="font-size:13px;color:#666;display:block;margin-bottom:5px">Valor da nota (R$)</label>
+      <input type="number" id="nota-valor" placeholder="0,00" step="0.01" style="width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:8px;background:#f9f9f9;font-size:13px;margin-bottom:10px"/>
+      <label style="font-size:13px;color:#666;display:block;margin-bottom:5px">Fornecedor / Descrição</label>
+      <textarea id="nota-desc" placeholder="Ex: Distribuidora SP — queijo, massa, calabresa"></textarea>
+      <div class="foto-placeholder" onclick="document.getElementById('nota-file').click()">
+        📷 Toque para anexar foto da nota fiscal
+      </div>
+      <input type="file" id="nota-file" accept="image/*" onchange="previewFoto(this)"/>
+      <div id="foto-preview" style="display:none"><img id="foto-img" class="nota-foto"/></div>
+      <button class="btn-primary" onclick="salvarNota()" style="margin-top:10px">📤 Enviar nota</button>
+      <div class="saved-msg" id="msg-nota">✅ Nota registrada!</div>
+    </div>
+  </div>
+
+  <div id="page-notas" class="page">
+    <div class="card">
+      <div class="card-title">Notas fiscais registradas</div>
+      <div id="lista-notas"><p style="text-align:center;color:#aaa;font-size:13px;padding:1.5rem 0">Nenhuma nota ainda.</p></div>
+    </div>
+  </div>
+
+  <div id="page-config" class="page">
+    <div class="card">
+      <div class="card-title">Mínimo por item / dia</div>
+      <select id="select-cfg-item" onchange="renderConfigItem()"></select>
+      <div id="config-dias"></div>
+    </div>
+    <button class="btn-primary" onclick="salvarConfig()">💾 Salvar</button>
+    <div class="saved-msg" id="msg-config">✅ Salvo!</div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-title">Atualizar preços</div>
+      <div id="lista-precos"></div>
+      <button class="btn-primary" onclick="salvarPrecos()">💾 Salvar preços</button>
+      <div class="saved-msg" id="msg-precos">✅ Preços salvos!</div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+const DIAS=['seg','ter','qua','qui','sex','sab','dom'];
+const DIAS_L={seg:'Seg',ter:'Ter',qua:'Qua',qui:'Qui',sex:'Sex',sab:'Sab',dom:'Dom'};
+const DIAS_JS={0:'dom',1:'seg',2:'ter',3:'qua',4:'qui',5:'sex',6:'sab'};
+const getDL=d=>({seg:'Segunda',ter:'Terça',qua:'Quarta',qui:'Quinta',sex:'Sexta',sab:'Sábado',dom:'Domingo'}[d]||d);
+const USUARIOS=[
+  {user:'gestor',senha:'1234',perfil:'gestor',nome:'Master',badge:'badge-gestor'},
+  {user:'compras',senha:'1234',perfil:'compras',nome:'Compras',badge:'badge-compras'},
+  {user:'cozinha1',senha:'1234',perfil:'cozinha',nome:'Cozinha 1',badge:'badge-cozinha'},
+  {user:'cozinha2',senha:'1234',perfil:'cozinha',nome:'Cozinha 2',badge:'badge-cozinha'},
+  {user:'cozinha3',senha:'1234',perfil:'cozinha',nome:'Cozinha 3',badge:'badge-cozinha'},
+];
+const MENUS={
+  gestor:[{id:'contagem',label:'Contagem'},{id:'compras',label:'Compras'},{id:'notas',label:'Notas'},{id:'config',label:'Config'}],
+  compras:[{id:'compras',label:'Compras'}],
+  cozinha:[{id:'contagem',label:'Contagem'}],
+};
+const itens=[
+  {id:'massa',nome:'Massa de pizza',unidade:'un'},
+  {id:'queijo',nome:'Queijo mussarela',unidade:'kg'},
+  {id:'molho',nome:'Molho de tomate',unidade:'L'},
+  {id:'frango',nome:'Frango desfiado',unidade:'kg'},
+  {id:'calabresa',nome:'Calabresa',unidade:'kg'},
+  {id:'embalagem',nome:'Embalagem pizza',unidade:'un'},
+  {id:'luva',nome:'Luvas descartáveis',unidade:'cx'},
+  {id:'papel',nome:'Papel manteiga',unidade:'rl'},
+];
+let estoque={},precos={},minimios={},diasSel=[],usuarioAtual=null,notas=[],fotoBase64=null,listaGerada=[];
+itens.forEach(i=>{estoque[i.id]=0;precos[i.id]=0;minimios[i.id]={};DIAS.forEach(d=>minimios[i.id][d]=0);});
+minimios['massa']={seg:30,ter:30,qua:35,qui:40,sex:50,sab:60,dom:55};
+minimios['queijo']={seg:5,ter:5,qua:6,qui:7,sex:9,sab:11,dom:10};
+minimios['molho']={seg:4,ter:4,qua:4,qui:5,sex:6,sab:8,dom:7};
+minimios['frango']={seg:3,ter:3,qua:3,qui:4,sex:5,sab:6,dom:5};
+minimios['calabresa']={seg:3,ter:3,qua:3,qui:4,sex:5,sab:7,dom:6};
+minimios['embalagem']={seg:30,ter:30,qua:35,qui:40,sex:50,sab:60,dom:55};
+minimios['luva']={seg:1,ter:1,qua:1,qui:1,sex:1,sab:2,dom:1};
+minimios['papel']={seg:1,ter:1,qua:1,qui:1,sex:1,sab:1,dom:1};
+precos['massa']=4.5;precos['queijo']=32;precos['molho']=8;precos['frango']=18;precos['calabresa']=22;precos['embalagem']=1.2;precos['luva']=15;precos['papel']=12;
+function getTurno(){const t=new Date().getHours()*60+new Date().getMinutes();if(t<=300)return'final';if(t<=1410)return'alfa';return'bloqueado';}
+function getDiaRef(){const h=new Date().getHours(),d=new Date();if(h<6)d.setDate(d.getDate()-1);return DIAS_JS[d.getDay()];}
+function estiloDia(btn,sel){if(sel){btn.style.background='#27ae60';btn.style.color='white';btn.style.borderColor='#27ae60';}else{btn.style.background='#f5f5f5';btn.style.color='#888';btn.style.borderColor='#ddd';}}
+function fazerLogin(){
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const s=document.getElementById('login-pass').value;
+  const found=USUARIOS.find(x=>x.user===u&&x.senha===s);
+  if(!found){document.getElementById('login-error').style.display='block';return;}
+  usuarioAtual=found;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  document.getElementById('login-error').style.display='none';
+  document.getElementById('perfil-label').innerHTML='<span class="perfil-badge '+found.badge+'">'+found.nome+'</span>';
+  buildNav(found.perfil);showPage(MENUS[found.perfil][0].id);
+}
+function logout(){
+  usuarioAtual=null;diasSel=[];fotoBase64=null;listaGerada=[];
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
+}
+function buildNav(p){document.getElementById('nav-bar').innerHTML=MENUS[p].map(m=>'<button id="nav-'+m.id+'" onclick="showPage(\''+m.id+'\')">'+m.label+'</button>').join('');}
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(el=>el.classList.remove('active'));
+  const pg=document.getElementById('page-'+p);if(pg)pg.classList.add('active');
+  const nb=document.getElementById('nav-'+p);if(nb)nb.classList.add('active');
+  if(p==='contagem')renderContagem();if(p==='compras')renderCompras();
+  if(p==='notas')renderNotas();if(p==='config'){renderConfigSelect();renderPrecos();}
+}
+function getAlertas(dia){return itens.filter(i=>(minimios[i.id][dia]||0)>0&&estoque[i.id]<minimios[i.id][dia]).map(i=>({item:i,falta:minimios[i.id][dia]-estoque[i.id]}));}
+function renderContagem(){
+  const turno=getTurno(),dia=getDiaRef(),alertas=getAlertas(dia),alertaIds=alertas.map(a=>a.item.id);
+  const tInfo=document.getElementById('turno-info');
+  if(turno==='alfa')tInfo.innerHTML='<span class="turno-badge turno-alfa">🌙 Turno Alfa — até 23h30</span>';
+  else if(turno==='final')tInfo.innerHTML='<span class="turno-badge turno-final">🌅 Turno Final — até 05h00</span>';
+  else tInfo.innerHTML='<span class="turno-badge turno-bloq">🔒 Fora do horário</span>';
+  const bA=document.getElementById('banner-alerta'),bO=document.getElementById('banner-ok'),bB=document.getElementById('banner-bloq');
+  if(turno==='bloqueado'){bB.style.display='block';bA.style.display='none';bO.style.display='none';}
+  else if(alertas.length>0){
+    bA.style.display='block';bO.style.display='none';bB.style.display='none';
+    bA.innerHTML='<div class="banner-title">⚠️ Vai faltar para '+getDL(dia)+'!</div>'+alertas.map(a=>'<div class="banner-item"><span>'+a.item.nome+'</span><span>faltam <b>'+a.falta+' '+a.item.unidade+'</b></span></div>').join('');
+  }else{bO.style.display='block';bA.style.display='none';bB.style.display='none';bO.innerHTML='<div class="banner-title">✅ Estoque ok para '+getDL(dia)+'!</div>';}
+  let c=0;itens.forEach(i=>{if(estoque[i.id]>0)c++;});
+  document.getElementById('stat-cont').textContent=c;
+  document.getElementById('stat-falta').textContent=alertas.length;
+  document.getElementById('sc-falta').className='stat-card'+(alertas.length>0?' danger':'');
+  const bloq=turno==='bloqueado';
+  document.getElementById('lista-contagem').innerHTML=itens.map(item=>{
+    const isA=alertaIds.includes(item.id),min=minimios[item.id][dia]||0,fq=Math.max(0,min-estoque[item.id]);
+    return '<div class="item-row '+(isA?'alerta':'')+'"><div style="flex:1"><div class="iname '+(isA?'danger':'')+'">'+( isA?'⚠️ ':'')+item.nome+'</div>'+(isA?'<div class="alerta-sub">Faltam '+fq+' '+item.unidade+' p/ mínimo</div>':'')+(min>0?'<div class="min-sub">Mínimo '+getDL(dia)+': '+min+' '+item.unidade+'</div>':'')+'</div><span class="iunit">'+item.unidade+'</span><input class="qty-input '+(isA?'danger':'')+'" type="number" min="0" step="0.5" value="'+estoque[item.id]+'" id="cont-'+item.id+'" '+(bloq?'disabled':'')+' oninput="atualizarLive()"/></div>';
+  }).join('');
+  document.getElementById('btn-salvar-wrap').style.display=bloq?'none':'block';
+}
+function atualizarLive(){
+  const dia=getDiaRef();let c=0,f=0;
+  itens.forEach(i=>{
+    const v=parseFloat(document.getElementById('cont-'+i.id)?.value||0),min=minimios[i.id][dia]||0;
+    const inp=document.getElementById('cont-'+i.id);if(inp)inp.className='qty-input'+(min>0&&v<min?' danger':'');
+    if(v>0)c++;if(min>0&&v<min)f++;
+  });
+  document.getElementById('stat-cont').textContent=c;document.getElementById('stat-falta').textContent=f;
+  document.getElementById('sc-falta').className='stat-card'+(f>0?' danger':'');
+}
+function salvarContagem(){
+  itens.forEach(i=>{estoque[i.id]=parseFloat(document.getElementById('cont-'+i.id)?.value||0);});
+  renderContagem();const m=document.getElementById('msg-contagem');m.style.display='block';setTimeout(()=>m.style.display='none',2000);
+}
+function renderCompras(){
+  const dia=getDiaRef(),alertas=getAlertas(dia);
+  const bA=document.getElementById('banner-compras-alerta'),bO=document.getElementById('banner-compras-ok');
+  if(alertas.length>0){bA.style.display='block';bO.style.display='none';bA.innerHTML='<div class="banner-title">⚠️ Falta para hoje ('+getDL(dia)+')</div>'+alertas.map(a=>'<div class="banner-item"><span>'+a.item.nome+'</span><span>faltam <b>'+a.falta+' '+a.item.unidade+'</b></span></div>').join('');}
+  else{bO.style.display='block';bA.style.display='none';bO.innerHTML='<div class="banner-title">✅ Estoque ok para '+getDL(dia)+'</div>';}
+  diasSel=[dia];
+  const container=document.getElementById('dias-selector');container.innerHTML='';
+  DIAS.forEach(d=>{
+    const btn=document.createElement('button');btn.className='dia-btn';
+    btn.textContent=DIAS_L[d]+(d===dia?' ★':'');
+    estiloDia(btn,diasSel.includes(d));
+    if(d===dia){btn.disabled=true;btn.style.opacity='1';}
+    else{btn.addEventListener('click',function(){const idx=diasSel.indexOf(d);if(idx>=0){diasSel.splice(idx,1);estiloDia(btn,false);}else{diasSel.push(d);estiloDia(btn,true);}});}
+    container.appendChild(btn);
+  });
+}
+function gerarLista(){
+  if(diasSel.length===0){alert('Selecione pelo menos um dia.');return;}
+  listaGerada=[];let total=0,html='',temItem=false;
+  itens.forEach(item=>{
+    let nec=0;diasSel.forEach(d=>{nec+=(minimios[item.id][d]||0);});
+    const falta=Math.max(0,nec-estoque[item.id]);
+    if(falta>0){temItem=true;const valor=falta*(precos[item.id]||0);total+=valor;listaGerada.push({nome:item.nome,qtd:falta,unidade:item.unidade,valor});html+='<div class="compra-item"><div><div class="cname">'+item.nome+'</div><div class="cqtd">Comprar: '+falta+' '+item.unidade+' · estoque: '+estoque[item.id]+'</div></div><div class="cval">'+(precos[item.id]>0?'R$ '+valor.toFixed(2):'—')+'</div></div>';}
+  });
+  if(!temItem)html='<p style="text-align:center;color:#aaa;font-size:13px;padding:1rem">✅ Estoque suficiente!</p>';
+  document.getElementById('lista-compras-itens').innerHTML=html;
+  document.getElementById('total-compras').textContent=total>0?'R$ '+total.toFixed(2):'—';
+  document.getElementById('resultado-compras').style.display='block';
+  document.getElementById('lista-texto').style.display='none';
+  const btn=document.getElementById('btn-wpp');btn.className='btn-copy';btn.textContent='📱 Copiar para WhatsApp';
+}
+function gerarTexto(modo){
+  const now=new Date(),hora=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),data=now.toLocaleDateString('pt-BR');
+  const diasLabel=diasSel.map(d=>getDL(d)).join(', ');let txt='';
+  if(modo==='wpp'){
+    txt='🍕 *MANET PIZZA — Lista de Compras*\n📅 '+data+' às '+hora+'\n📦 Dias: '+diasLabel+'\n\n';
+    if(listaGerada.length===0){txt+='✅ Estoque suficiente!';return txt;}
+    txt+='*ITENS A COMPRAR:*\n';
+    listaGerada.forEach(i=>{txt+='• '+i.nome+': *'+i.qtd+' '+i.unidade+'*'+(i.valor>0?' — R$ '+i.valor.toFixed(2):'')+'\n';});
+    const t=listaGerada.reduce((s,i)=>s+i.valor,0);if(t>0)txt+='\n💰 *TOTAL: R$ '+t.toFixed(2)+'*';
+  }else{
+    txt='MANET PIZZA - Lista de Compras\nData: '+data+' '+hora+'\nDias: '+diasLabel+'\n'+'─'.repeat(30)+'\n';
+    if(listaGerada.length===0){txt+='Estoque suficiente.';return txt;}
+    listaGerada.forEach(i=>{txt+=i.nome+': '+i.qtd+' '+i.unidade+(i.valor>0?' - R$ '+i.valor.toFixed(2):'')+'\n';});
+    const t=listaGerada.reduce((s,i)=>s+i.valor,0);if(t>0)txt+='─'.repeat(30)+'\nTOTAL: R$ '+t.toFixed(2);
+  }
+  return txt;
+}
+function copiarLista(modo){
+  const txt=gerarTexto(modo),txtEl=document.getElementById('lista-texto');txtEl.textContent=txt;txtEl.style.display='block';
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>{if(modo==='wpp'){const btn=document.getElementById('btn-wpp');btn.className='btn-copy copied';btn.textContent='✅ Copiado!';setTimeout(()=>{btn.className='btn-copy';btn.textContent='📱 Copiar para WhatsApp';},2500);}});}
+  else{const r=document.createRange();r.selectNode(txtEl);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');window.getSelection().removeAllRanges();}
+}
+function previewFoto(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{fotoBase64=e.target.result;document.getElementById('foto-img').src=fotoBase64;document.getElementById('foto-preview').style.display='block';};reader.readAsDataURL(file);}
+function salvarNota(){
+  const valor=parseFloat(document.getElementById('nota-valor').value||0),desc=document.getElementById('nota-desc').value.trim();
+  if(!valor&&!desc){alert('Informe o valor ou descrição.');return;}
+  const now=new Date();notas.unshift({data:now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),valor,desc,foto:fotoBase64});
+  document.getElementById('nota-valor').value='';document.getElementById('nota-desc').value='';document.getElementById('foto-preview').style.display='none';fotoBase64=null;
+  const m=document.getElementById('msg-nota');m.style.display='block';setTimeout(()=>m.style.display='none',2000);
+}
+function renderNotas(){
+  const el=document.getElementById('lista-notas');
+  if(notas.length===0){el.innerHTML='<p style="text-align:center;color:#aaa;font-size:13px;padding:1.5rem 0">Nenhuma nota ainda.</p>';return;}
+  el.innerHTML=notas.map(n=>'<div class="nota-card"><div class="nota-header"><span class="nota-data">📅 '+n.data+'</span><span class="nota-valor-txt">'+(n.valor>0?'R$ '+n.valor.toFixed(2):'—')+'</span></div>'+(n.desc?'<div class="nota-desc-txt">'+n.desc+'</div>':'')+(n.foto?'<img src="'+n.foto+'" class="nota-foto"/>'  :'')+'</div>').join('');
+}
+function renderConfigSelect(){document.getElementById('select-cfg-item').innerHTML=itens.map(i=>'<option value="'+i.id+'">'+i.nome+'</option>').join('');renderConfigItem();}
+function renderConfigItem(){
+  const id=document.getElementById('select-cfg-item').value,item=itens.find(i=>i.id===id);
+  document.getElementById('config-dias').innerHTML='<div class="config-grid">'+DIAS.map(d=>'<div class="config-cell"><label>'+getDL(d)+' ('+item.unidade+')</label><input type="number" min="0" step="0.5" value="'+(minimios[id][d]||0)+'" id="cfg-'+id+'-'+d+'"/></div>').join('')+'</div>';
+}
+function salvarConfig(){
+  const id=document.getElementById('select-cfg-item').value;DIAS.forEach(d=>{minimios[id][d]=parseFloat(document.getElementById('cfg-'+id+'-'+d)?.value||0);});
+  const m=document.getElementById('msg-config');m.style.display='block';setTimeout(()=>m.style.display='none',2000);
+}
+function renderPrecos(){document.getElementById('lista-precos').innerHTML=itens.map(i=>'<div class="preco-row"><span class="preco-nome">'+i.nome+' <span style="font-size:11px;color:#aaa">(/' +i.unidade+')</span></span><input class="preco-input" type="number" min="0" step="0.01" value="'+(precos[i.id]||'')+'" id="preco-'+i.id+'"/></div>').join('');}
+function salvarPrecos(){itens.forEach(i=>{precos[i.id]=parseFloat(document.getElementById('preco-'+i.id)?.value||0);});const m=document.getElementById('msg-precos');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
+</script>
+</body>
+</html>
