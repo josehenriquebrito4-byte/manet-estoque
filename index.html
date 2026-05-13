@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Manet Pizza — Estoque</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f4;color:#222}
@@ -439,8 +440,10 @@ function atualizarLive(){
   document.getElementById('stat-cont').textContent=c;
   if(podeVerAlertas()){document.getElementById('stat-falta').textContent=f;document.getElementById('sc-falta').className='stat-card'+(f>0?' danger':'');}
 }
-function salvarContagem(){
+async function salvarContagem(){
   todosItens.forEach(i=>{const inp=document.getElementById('cont-'+i.id);if(inp)estoque[i.id]=parseFloat(inp.value||0);});
+  const rows=todosItens.map(i=>({id:i.id,quantidade:estoque[i.id]}));
+  await sb.from('estoque').upsert(rows);
   renderContagem();const m=document.getElementById('msg-contagem');m.style.display='block';setTimeout(()=>m.style.display='none',2000);
 }
 function renderCompras(){
@@ -496,10 +499,13 @@ function copiarLista(modo){
   else{const r=document.createRange();r.selectNode(txtEl);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');window.getSelection().removeAllRanges();}
 }
 function previewFoto(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{fotoBase64=e.target.result;document.getElementById('foto-img').src=fotoBase64;document.getElementById('foto-preview').style.display='block';};reader.readAsDataURL(file);}
-function salvarNota(){
+async function salvarNota(){
   const valor=parseFloat(document.getElementById('nota-valor').value||0),desc=document.getElementById('nota-desc').value.trim();
   if(!valor&&!desc){alert('Informe o valor ou descrição.');return;}
-  const now=new Date();notas.unshift({data:now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),valor,desc,foto:fotoBase64});
+  const now=new Date();
+  const nota={data:now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),valor,desc,foto:fotoBase64};
+  notas.unshift(nota);
+  await sb.from('notas').insert({valor,descricao:desc,foto:fotoBase64});
   document.getElementById('nota-valor').value='';document.getElementById('nota-desc').value='';document.getElementById('foto-preview').style.display='none';fotoBase64=null;
   const m=document.getElementById('msg-nota');m.style.display='block';setTimeout(()=>m.style.display='none',2000);
 }
@@ -516,16 +522,42 @@ function renderConfigItem(){
   const id=document.getElementById('select-cfg-item').value,item=todosItens.find(i=>i.id===id);
   document.getElementById('config-dias').innerHTML='<div class="config-grid">'+DIAS.map(d=>'<div class="config-cell"><label>'+getDL(d)+' ('+item.unidade+')</label><input type="number" min="0" step="0.5" value="'+(minimios[id][d]||0)+'" id="cfg-'+id+'-'+d+'"/></div>').join('')+'</div>';
 }
-function salvarConfig(){
-  const id=document.getElementById('select-cfg-item').value;DIAS.forEach(d=>{minimios[id][d]=parseFloat(document.getElementById('cfg-'+id+'-'+d)?.value||0);});
+async function salvarConfig(){
+  const id=document.getElementById('select-cfg-item').value;
+  DIAS.forEach(d=>{minimios[id][d]=parseFloat(document.getElementById('cfg-'+id+'-'+d)?.value||0);});
+  await sb.from('minimios').upsert({id,...minimios[id]});
   const m=document.getElementById('msg-config');m.style.display='block';setTimeout(()=>m.style.display='none',2000);
 }
 function renderPrecos(filtro){
   const lista=filtro?todosItens.filter(i=>i.nome.toLowerCase().includes(filtro.toLowerCase())):todosItens;
   document.getElementById('lista-precos').innerHTML=lista.map(i=>'<div class="preco-row"><span class="preco-nome">'+i.nome+' <span style="font-size:10px;color:#aaa">(R$/'+i.unidade+')</span></span><input class="preco-input" type="number" min="0" step="0.01" value="'+(precos[i.id]||'')+'" id="preco-'+i.id+'"/></div>').join('');
 }
-function filtrarPrecos(v){renderPrecos(v);}
-function salvarPrecos(){todosItens.forEach(i=>{const inp=document.getElementById('preco-'+i.id);if(inp)precos[i.id]=parseFloat(inp.value||0);});const m=document.getElementById('msg-precos');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
+// Supabase
+const SUPA_URL='https://cosjdjhkdpbndgoqgcup.supabase.co';
+const SUPA_KEY='sb_publishable_N-6N6-AQ_o93hsiqRr6_Zw_M_0H76qM';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+async function carregarDados(){
+  // estoque
+  const {data:est}=await sb.from('estoque').select('*');
+  if(est)est.forEach(r=>{if(estoque.hasOwnProperty(r.id))estoque[r.id]=r.quantidade||0;});
+  // minimios
+  const {data:mins}=await sb.from('minimios').select('*');
+  if(mins)mins.forEach(r=>{if(minimios.hasOwnProperty(r.id)){DIAS.forEach(d=>{minimios[r.id][d]=r[d]||0;});}});
+  // precos
+  const {data:prec}=await sb.from('precos').select('*');
+  if(prec)prec.forEach(r=>{if(precos.hasOwnProperty(r.id))precos[r.id]=r.preco||0;});
+  // notas
+  const {data:nts}=await sb.from('notas').select('*').order('created_at',{ascending:false});
+  if(nts)notas=nts.map(n=>({data:new Date(n.created_at).toLocaleDateString('pt-BR')+' '+new Date(n.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),valor:n.valor,desc:n.descricao,foto:n.foto}));
+}
+carregarDados();
+async function salvarPrecos(){
+  todosItens.forEach(i=>{const inp=document.getElementById('preco-'+i.id);if(inp)precos[i.id]=parseFloat(inp.value||0);});
+  const rows=todosItens.map(i=>({id:i.id,preco:precos[i.id]}));
+  await sb.from('precos').upsert(rows);
+  const m=document.getElementById('msg-precos');m.style.display='block';setTimeout(()=>m.style.display='none',2000);
+}
 </script>
 </body>
 </html>
