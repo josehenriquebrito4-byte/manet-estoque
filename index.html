@@ -4,7 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Manet Pizza — Estoque</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#c0392b"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Manet Estoque"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f4;color:#222}
@@ -102,6 +108,28 @@ textarea{width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:8px;bac
 </style>
 </head>
 <body>
+<div id="splash" style="position:fixed;inset:0;background:#f0b41e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s">
+  <div style="background:white;border-radius:24px;padding:24px 32px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+    <div style="font-size:64px;margin-bottom:8px">🍕</div>
+    <div style="color:#f0b41e;font-size:28px;font-weight:900;font-family:-apple-system,sans-serif;letter-spacing:-1px">MANET</div>
+    <div style="color:#4caf50;font-size:16px;font-weight:700;font-family:-apple-system,sans-serif;letter-spacing:4px">PIZZAS</div>
+  </div>
+  <div style="margin-top:32px;color:rgba(255,255,255,0.8);font-size:13px;font-family:-apple-system,sans-serif">Estoque & Compras</div>
+  <div style="margin-top:20px;width:48px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;overflow:hidden">
+    <div id="splash-bar" style="height:100%;background:white;width:0%;transition:width 2s ease"></div>
+  </div>
+</div>
+
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#222;color:white;padding:14px 16px;display:none;align-items:center;gap:10px;z-index:100;font-family:-apple-system,sans-serif">
+  <span style="font-size:24px">🍕</span>
+  <div style="flex:1">
+    <div style="font-size:13px;font-weight:600">Instalar Manet Estoque</div>
+    <div style="font-size:11px;color:#aaa">Adicionar à tela inicial</div>
+  </div>
+  <button id="btn-instalar" style="background:#c0392b;color:white;border:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Instalar</button>
+  <button onclick="document.getElementById('install-banner').style.display='none'" style="background:transparent;border:none;color:#aaa;font-size:18px;cursor:pointer">✕</button>
+</div>
+
 <div class="app">
 <div id="login-screen" class="login-screen">
   <div class="login-logo">🍕</div>
@@ -532,6 +560,25 @@ function renderPrecos(filtro){
   const lista=filtro?todosItens.filter(i=>i.nome.toLowerCase().includes(filtro.toLowerCase())):todosItens;
   document.getElementById('lista-precos').innerHTML=lista.map(i=>'<div class="preco-row"><span class="preco-nome">'+i.nome+' <span style="font-size:10px;color:#aaa">(R$/'+i.unidade+')</span></span><input class="preco-input" type="number" min="0" step="0.01" value="'+(precos[i.id]||'')+'" id="preco-'+i.id+'"/></div>').join('');
 }
+// PWA install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  const b=document.getElementById('install-banner');b.style.display='flex';
+  document.getElementById('btn-instalar').onclick=()=>{deferredPrompt.prompt();b.style.display='none';};
+});
+
+// Splash screen
+window.addEventListener('load',()=>{
+  const bar=document.getElementById('splash-bar');
+  setTimeout(()=>bar.style.width='100%',100);
+  setTimeout(()=>{
+    const splash=document.getElementById('splash');
+    splash.style.opacity='0';
+    setTimeout(()=>splash.style.display='none',500);
+  },2000);
+});
+
 // Supabase
 const SUPA_URL='https://cosjdjhkdpbndgoqgcup.supabase.co';
 const SUPA_KEY='sb_publishable_N-6N6-AQ_o93hsiqRr6_Zw_M_0H76qM';
